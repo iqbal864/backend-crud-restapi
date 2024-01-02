@@ -7,10 +7,11 @@ interface ProductInterface {
   stok: Number;
 }
 
-export const createProductValidation = (payload: ProductInterface) => {
+export const productValidation = (payload: ProductInterface) => {
   const schema = Joi.object({
     name: Joi.string().required(),
-    price: Joi.number().allow('', null),
+    // price: Joi.number().allow('', null),
+    price: Joi.number().required(),
     stok: Joi.number().required()
   });
 
