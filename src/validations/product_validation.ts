@@ -1,11 +1,9 @@
+/* eslint-disable @typescript-eslint/member-delimiter-style */
 import Joi from 'joi';
 
 interface ProductInterface {
-  // eslint-disable-next-line @typescript-eslint/member-delimiter-style
   name: String;
-  // eslint-disable-next-line @typescript-eslint/member-delimiter-style
   price: Number;
-  // eslint-disable-next-line @typescript-eslint/member-delimiter-style
   stok: Number;
 }
 
