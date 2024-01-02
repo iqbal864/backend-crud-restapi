@@ -1,56 +1,59 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import { createProductValidation } from '../validations/product_validation';
 import { logger } from '../utils/logger';
+import { PrismaClient } from '@prisma/client';
 
-export const getProduct = (req: Request, res: Response, next: NextFunction) => {
-  const products = [
-    {
-      id: 1,
-      name: 'Adidas Samba',
-      price: 2000000
-    },
-    {
-      id: 2,
-      name: 'Adidas Jeans',
-      price: 1500000
-    }
-  ];
+const prisma = new PrismaClient();
 
-  const id = req.params.id;
+export const getProduct = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const products = await prisma.products.findMany();
 
-  if (id) {
-    const filterProducts = products.filter((product) => {
-      if (product.id === Number(id)) {
-        return product;
+    const id = req.params.id;
+
+    if (id) {
+      const product = await prisma.products.findFirst({
+        where: {
+          id: Number(id)
+        }
+      });
+
+      if (product == null) {
+        logger.info('Data product not found');
+        return res.status(404).send({
+          status: false,
+          statusCode: 404,
+          data: {}
+        });
       }
-    });
 
-    if (filterProducts.length === 0) {
-      logger.info('data not found');
-      return res.status(404).send({
-        status: false,
-        statusCode: 404,
-        data: {}
+      logger.info('Get data product');
+      return res.status(200).send({
+        status: true,
+        statusCode: 200,
+        data: product
       });
     }
 
-    logger.info('get data product');
+    logger.info('Get data product');
     return res.status(200).send({
       status: true,
       statusCode: 200,
-      data: filterProducts[0]
+      data: products
     });
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error('ERR: (Get Product) = ', error.message);
+      return res.status(500).send({
+        status: false,
+        statusCode: 500,
+        message: error.message
+      });
+    }
   }
-
-  logger.info('get data product');
-  return res.status(200).send({
-    status: true,
-    statusCode: 200,
-    data: products
-  });
 };
 
-export const createProduct = (req: Request, res: Response, next: NextFunction) => {
+export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const { error, value } = createProductValidation(req.body);
   if (error != null) {
@@ -63,11 +66,30 @@ export const createProduct = (req: Request, res: Response, next: NextFunction) =
     });
   }
 
-  logger.info('success add data product');
-  return res.status(200).send({
-    status: true,
-    statusCode: 200,
-    message: 'Success add data product',
-    data: value
-  });
+  try {
+    const product = await prisma.products.create({
+      data: {
+        name: value.name,
+        price: value.price,
+        stok: value.stok
+      }
+    });
+
+    logger.info('Success add data product');
+    return res.status(200).send({
+      status: true,
+      statusCode: 200,
+      message: 'Success add data product',
+      data: product
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error('ERR: (Create Product) = ', error.message);
+      return res.status(500).send({
+        status: false,
+        statusCode: 500,
+        message: error.message
+      });
+    }
+  }
 };
